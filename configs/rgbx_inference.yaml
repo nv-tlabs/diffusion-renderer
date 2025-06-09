@@ -1,5 +1,5 @@
 
-inference_model_weights: 'nvidia/diffusion_renderer-inverse-svd'
+inference_model_weights: 'nexuslrf/diffusion_renderer-inverse-svd'
 
 inference_res: [ 512, 512 ]
 

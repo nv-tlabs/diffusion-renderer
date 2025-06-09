@@ -1,6 +1,7 @@
 
 
-inference_model_weights: 'nvidia/diffusion_renderer-forward-svd'
+inference_model_weights: 'nexuslrf/diffusion_renderer-forward-svd'
+# or 'nexuslrf/diffusion_renderer-forward-svd-objaverse'
 
 inference_res: [ 512, 512 ]
 

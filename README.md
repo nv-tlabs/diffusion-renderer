@@ -36,7 +36,14 @@ If running the forward rendering model, install nvdiffrast following the officia
 
 ## Model Weights
 
-WIP
+The model weights are available on [Hugging Face](https://huggingface.co/collections/nexuslrf/diffusionrenderer-svd-68472d636e85c29b6c25422f).
+We provide 3 checkpoints:
+
+| Checkpoints | Description |
+| --- | --- |
+| [nexuslrf/diffusion_renderer-inverse-svd](https://huggingface.co/nexuslrf/diffusion_renderer-inverse-svd) | Inverse Rendering Model |
+| [nexuslrf/diffusion_renderer-forward-svd-objaverse](https://huggingface.co/nexuslrf/diffusion_renderer-forward-svd-objaverse) | Forward Rendering Model (only trained on synthetic data) |
+| [nexuslrf/diffusion_renderer-forward-svd](https://huggingface.co/nexuslrf/diffusion_renderer-forward-svd) | Forward Rendering Model (synthetic + auto-labeled real data, w/ LoRA) |
 
 ## Running inference
 
