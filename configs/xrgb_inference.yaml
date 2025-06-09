@@ -1,0 +1,76 @@
+
+
+inference_model_weights: 'nvidia/diffusion_renderer-forward-svd'
+
+inference_res: [ 512, 512 ]
+
+inference_input_dir: "examples/output_delighting/"
+inference_save_dir: "examples/output_relighting/"
+
+inference_n_frames: 24
+#overlap_n_frames: 6
+inference_n_steps: 20
+inference_min_guidance_scale: 1.2
+inference_max_guidance_scale: 1.2
+
+
+
+cond_mode: 'env' # clip branch for cross attention
+lora_scale: 0.25
+model_pipeline:
+  cond_mode: 'env' # clipimage for cross attention
+  target_image: 'rgb'
+
+  cond_images:
+    basecolor: vae
+    normal: vae
+    depth: vae
+    roughness: vae
+    metallic: vae
+    env_ldr: env
+    env_log: env
+    env_nrm: env
+
+  scale_cond_latents: true # NOTE
+  motion_bucket_id: 127
+  fps: 7
+  cond_aug: null
+  cond_sigma_mean: -3.0
+  cond_sigma_std: 0.5
+
+  env_resolution: [ 512, 512 ]
+  unet_kwargs:
+    temporal_cross_attention_dim: null
+    cross_attention_dim: [320, 640, 1280, 1280]
+    multi_res_encoder_hidden_states: true
+    in_channels: 24
+    conv_in_init: zero # additional extend channel is zero init
+    reset_cross_attention: false
+
+#chunk_mode: 'first' # first, all, drop_last
+image_group_mode: "webdataset"  # folder, webdataset
+
+
+envlight:   # string or a list of env map paths
+  - "examples/hdri/sunny_vondelpark_1k.hdr"
+  - "examples/hdri/pink_sunrise_1k.hdr"
+  # - "examples/hdri/street_lamp_1k.hdr"
+  # - "examples/hdri/circus_arena_1k.hdr"
+
+rotate_light: false
+cam_elevation: 0 # camera elevation angle in degrees
+
+seed: 0
+save_video: true
+save_video_fps: 10
+save_image: true
+
+autocast: true
+
+use_deterministic_mode: false
+
+subsample_every_n_frames: 1
+
+use_fixed_frame_ind: false
+fixed_frame_ind: 0
+
