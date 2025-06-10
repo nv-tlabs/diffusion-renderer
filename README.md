@@ -166,11 +166,14 @@ For 512*512 resolution and 24-frame video, 20 denoising steps:
 - Inverse renderer takes 9.7 seconds
 - Forward renderer takes 20.3 seconds (the overhead comes from the VAE encoding of more condition signals, with more proper parallelization it should be similar to inverse renderer)
 
-The inference code can also run on RTX 4090 (24 GB) GPUs with additiona memory saving options (which is enabled by default in YAML configs).
+The inference code can also run on RTX 4090 (24 GB) GPUs with additional memory saving options (which are enabled by default in provided yaml configs).
 
 - `model_dtype: fp16`, using fp16 mixed precision for model weights.
 - `decode_chunk_size: 8`, decoding the VAE in chunks to save memory, it might slightly hurt temporal consistency.
 
+After applying these options, model inference still requires over 22 GB of GPU memory. 
+
+Lower tier GPUs may be able to run by offloading some of the model weights to CPU (e.g., `pipeline.enable_model_cpu_offload()`), but this is not recommended.
 
 ## Acknowledgements
 
