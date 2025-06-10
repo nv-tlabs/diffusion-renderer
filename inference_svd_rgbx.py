@@ -59,10 +59,19 @@ def main():
     if cfg.get("use_deterministic_mode", None) is not None:
         use_deterministic_mode = cfg.get("use_deterministic_mode", None)
 
+    weight_dtype = cfg.get("weight_dtype", 'fp16')
+    if weight_dtype == 'fp16':
+        weight_dtype = torch.float16
+    elif weight_dtype == 'fp32':
+        weight_dtype = torch.float32
+
     missing_kwargs = {}
     missing_kwargs["cond_mode"] = cond_mode
     missing_kwargs["use_deterministic_mode"] = use_deterministic_mode
-    model_weights_subfolders = os.listdir(cfg.inference_model_weights)
+    if os.path.exists(cfg.inference_model_weights):
+        model_weights_subfolders = os.listdir(cfg.inference_model_weights)
+    else:
+        model_weights_subfolders = []
     if "image_encoder" not in model_weights_subfolders:
         missing_kwargs["image_encoder"] = CLIPVisionModelWithProjection.from_pretrained(
             "stabilityai/stable-video-diffusion-img2vid", subfolder="image_encoder",
@@ -77,6 +86,8 @@ def main():
     pipeline = RGBXVideoDiffusionPipeline.from_pretrained(cfg.inference_model_weights, **missing_kwargs)
     distributed_state = PartialState()
     pipeline = pipeline.to(distributed_state.device)
+    pipeline = pipeline.to(weight_dtype)
+    # pipeline.enable_model_cpu_offload() # for further memory savings
     pipeline.set_progress_bar_config(disable=True)
 
     default_n_frames = pipeline.unet.config.num_frames if pipeline.unet.config.num_frames else 14
@@ -210,6 +221,7 @@ def main():
                             motion_bucket_id=cfg.get('motion_bucket_id', 127),
                             noise_aug_strength=cfg.get('cond_aug', 0),
                             generator=generator,
+                            decode_chunk_size=cfg.get('decode_chunk_size', None),
                         ).frames[0]  # list of pil images
 
                     # Save images locally

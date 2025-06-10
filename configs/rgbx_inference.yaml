@@ -1,5 +1,5 @@
 
-inference_model_weights: 'nexuslrf/diffusion_renderer-inverse-svd'
+inference_model_weights: './checkpoints/diffusion_renderer-inverse-svd'
 
 inference_res: [ 512, 512 ]
 
@@ -13,6 +13,8 @@ inference_min_guidance_scale: 1.0
 inference_max_guidance_scale: 1.0
 #inference_n_repeat: 1
 
+model_dtype: fp16
+decode_chunk_size: 8
 cond_mode: 'skip' # clip branch for cross attention
 chunk_mode: 'first' # first, all, drop_last
 image_group_mode: "folder"  # folder, webdataset

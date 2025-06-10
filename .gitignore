@@ -1,2 +1,7 @@
+checkpoints/*
+examples/output_*
+examples/input_*
 examples/.DS_Store
 .DS_Store
+
+*.pyc

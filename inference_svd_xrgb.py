@@ -73,6 +73,12 @@ def main():
     if cfg.get("use_deterministic_mode", None) is not None:
         use_deterministic_mode = cfg.get("use_deterministic_mode", None)
 
+    weight_dtype = cfg.get("weight_dtype", 'fp16')
+    if weight_dtype == 'fp16':
+        weight_dtype = torch.float16
+    elif weight_dtype == 'fp32':
+        weight_dtype = torch.float32
+
     # model construction
     missing_kwargs = {}
     missing_kwargs["cond_mode"] = cond_mode
@@ -123,6 +129,8 @@ def main():
         print("Failed to load LoRA weights, using default weights")
 
     pipeline = pipeline.to(distributed_state.device)
+    pipeline = pipeline.to(weight_dtype)
+    # pipeline.enable_model_cpu_offload() # for further memory savings
     pipeline.set_progress_bar_config(disable=True)
 
     # data preparation
@@ -276,8 +284,9 @@ def main():
                         motion_bucket_id=cfg.get('motion_bucket_id', 127),
                         noise_aug_strength=cfg.get('cond_aug', 0),
                         generator=generator,
-                        cross_attention_kwargs={'scale': cfg.get('lora_scale', 0.5)},
+                        cross_attention_kwargs={'scale': cfg.get('lora_scale', 0.0)},
                         dynamic_guidance=False,
+                        decode_chunk_size=cfg.get('decode_chunk_size', None),
                         # num_videos_per_prompt=num_infer_per_image,    # can infer more than one results
                         # drop_conds=drop_conds,        # drop_conds should be None, or a list of attribute labels that will be discarded when running diffusion.
                     ).frames[0]  # list of pil images, assume to run inference only once

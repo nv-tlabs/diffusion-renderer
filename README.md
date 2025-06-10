@@ -22,7 +22,8 @@ Create an new environment with conda, and install pytorch. We tested with pytorc
 conda create -n diffusion_renderer python=3.10
 conda activate diffusion_renderer
 
-pip install torch==2.1.1 torchvision==0.16.1 --index-url https://download.pytorch.org/whl/cu118
+pip install torch==2.4.1 torchaudio==2.4.1 --index-url https://download.pytorch.org/whl/cu121
+
 ```
 
 Install other project specific dependencies as follows
@@ -32,20 +33,28 @@ Install other project specific dependencies as follows
 pip install -r requirements.txt
 ```
 
-If running the forward rendering model, install nvdiffrast following the official instructions: https://nvlabs.github.io/nvdiffrast/#installation
-
 ## Model Weights
 
 The model weights are available on [Hugging Face](https://huggingface.co/collections/nexuslrf/diffusionrenderer-svd-68472d636e85c29b6c25422f).
 We provide 3 checkpoints:
 
-| Checkpoints | Description |
-| --- | --- |
-| [nexuslrf/diffusion_renderer-inverse-svd](https://huggingface.co/nexuslrf/diffusion_renderer-inverse-svd) | Inverse Rendering Model |
-| [nexuslrf/diffusion_renderer-forward-svd-objaverse](https://huggingface.co/nexuslrf/diffusion_renderer-forward-svd-objaverse) | Forward Rendering Model (only trained on synthetic data) |
-| [nexuslrf/diffusion_renderer-forward-svd](https://huggingface.co/nexuslrf/diffusion_renderer-forward-svd) | Forward Rendering Model (synthetic + auto-labeled real data, w/ LoRA) |
+| Checkpoints                                                                                                                | Description                                                           |
+| -------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| [nexuslrf/diffusion_renderer-inverse-svd](https://huggingface.co/nexuslrf/diffusion_renderer-inverse-svd)                     | Inverse Rendering Model                                               |
+| [nexuslrf/diffusion_renderer-forward-svd-objaverse](https://huggingface.co/nexuslrf/diffusion_renderer-forward-svd-objaverse) | Forward Rendering Model (only trained on synthetic data)              |
+| [nexuslrf/diffusion_renderer-forward-svd](https://huggingface.co/nexuslrf/diffusion_renderer-forward-svd)                     | Forward Rendering Model (synthetic + auto-labeled real data, w/ LoRA) |
+
+You can download model weights by running the following command:
+
+```bash
+python utils/download_weights.py --repo_id nexuslrf/diffusion_renderer-inverse-svd
+python utils/download_weights.py --repo_id nexuslrf/diffusion_renderer-forward-svd
+python utils/download_weights.py --repo_id nexuslrf/diffusion_renderer-forward-svd-objaverse
+```
 
 ## Running inference
+
+You can jump to the [Demo](#demo-example) section for a quick start.
 
 ### Inference of the Video Inverse Rendering (De-lighting) Model
 
@@ -71,7 +80,7 @@ inference_input_dir/
 The inference script can run with the following command with python file `inference_svd_rgbx.py`:
 
 ```angular2html
-accelerate launch inference_svd_rgbx.py --config configs/rgbx_inference.yaml \
+python inference_svd_rgbx.py --config configs/rgbx_inference.yaml \
   inference_input_dir="/path/to/input_videos" \
   inference_save_dir="output_inference_delighting/" \
   inference_n_frames=24 inference_n_steps=20 model_passes="['basecolor','normal','depth','diffuse_albedo']" inference_res="[512,512]" 
@@ -98,7 +107,7 @@ For example, assuming the delighting result is saved in `output_inference_deligh
 the inference script can run with the following command with python file `inference_svd_xrgb.py`:
 
 ```angular2html
-accelerate launch inference_svd_xrgb.py --config configs/xrgb_inference.yaml \
+python inference_svd_xrgb.py --config configs/xrgb_inference.yaml \
   inference_input_dir="output_inference_delighting/" \
   inference_save_dir="output_inference_relighting/" \
   inference_n_frames=24 inference_n_steps=20 inference_res="[512,512]" \
@@ -113,6 +122,7 @@ The config system of this script is based on omegaconf, and the full list of arg
 - `inference_save_dir` specifies the directory to output inference results.
 - `inference_n_frames`: the number of frames to run video inference.
 - `inference_n_steps`: the number of denoising steps to run the video model.
+- `lora_scale`: the scale of LoRA. This LoRA is trained with real data, recommended scale: 0.0~0.5 (0.0 means no LoRA, good for synthetic objects).
 
 ### Demo Example
 
@@ -133,10 +143,10 @@ python inference_svd_rgbx.py --config configs/rgbx_inference.yaml inference_inpu
 ls $FOLDER_DELIGHTING_OUT/
 
 # 2.1 forward rendering (option 1): use all frames, static light
-python inference_svd_xrgb.py --config configs/xrgb_inference.yaml use_fixed_frame_ind=false  rotate_light=false  save_video_fps=$FRAME_RATE inference_input_dir=$FOLDER_DELIGHTING_OUT inference_save_dir=$FOLDER_RELIGHTING_OUT/dynamic_frame_static_light
+python inference_svd_xrgb.py --config configs/xrgb_inference.yaml use_fixed_frame_ind=false  rotate_light=false lora_scale=0.0  save_video_fps=$FRAME_RATE inference_input_dir=$FOLDER_DELIGHTING_OUT inference_save_dir=$FOLDER_RELIGHTING_OUT/dynamic_frame_static_light
 
 # 2.2 forward rendering (option 2): use the first frame, rotate light
-python inference_svd_xrgb.py --config configs/xrgb_inference.yaml use_fixed_frame_ind=true  rotate_light=true  save_video_fps=$FRAME_RATE inference_input_dir=$FOLDER_DELIGHTING_OUT inference_save_dir=$FOLDER_RELIGHTING_OUT/static_frame_rotate_light
+python inference_svd_xrgb.py --config configs/xrgb_inference.yaml use_fixed_frame_ind=true  rotate_light=true lora_scale=0.0 save_video_fps=$FRAME_RATE inference_input_dir=$FOLDER_DELIGHTING_OUT inference_save_dir=$FOLDER_RELIGHTING_OUT/static_frame_rotate_light
 
 # results of relighting is saved here:  
 ls $FOLDER_RELIGHTING_OUT/*
@@ -150,11 +160,16 @@ Forward rendering takes ~3min (inference of 4 different lighting conditions).
 
 ### Run time statistics
 
-The inference code was tested on A100 gpus.
+The inference code was initially tested on A100 (80 GB) GPUs.
 For 512*512 resolution and 24-frame video, 20 denoising steps:
 
 - Inverse renderer takes 9.7 seconds
 - Forward renderer takes 20.3 seconds (the overhead comes from the VAE encoding of more condition signals, with more proper parallelization it should be similar to inverse renderer)
+
+The inference code can also run on RTX 4090 (24 GB) GPUs with additiona memory saving options (which is enabled by default in YAML configs).
+
+- `model_dtype: fp16`, using fp16 mixed precision for model weights.
+- `decode_chunk_size: 8`, decoding the VAE in chunks to save memory, it might slightly hurt temporal consistency.
 
 
 ## Acknowledgements
@@ -162,7 +177,6 @@ For 512*512 resolution and 24-frame video, 20 denoising steps:
 Our model is based on [Stable Video Diffusion](https://huggingface.co/stabilityai/stable-video-diffusion-img2vid) from Stability AI.
 
 The Stability AI Model is licensed under the [Stability AI Community License](https://huggingface.co/stabilityai/stable-video-diffusion-img2vid-xt/blob/main/LICENSE.md), Copyright &copy; Stability AI Ltd. All Rights Reserved
-
 
 ## License
 
@@ -187,5 +201,3 @@ If you find this work useful, please consider citing:
     year = {2025}
 }
 ```
-
-

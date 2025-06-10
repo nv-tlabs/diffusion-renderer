@@ -1,7 +1,7 @@
 
 
-inference_model_weights: 'nexuslrf/diffusion_renderer-forward-svd'
-# or 'nexuslrf/diffusion_renderer-forward-svd-objaverse'
+inference_model_weights: './checkpoints/diffusion_renderer-forward-svd'
+# or './checkpoints/diffusion_renderer-forward-svd-objaverse'
 
 inference_res: [ 512, 512 ]
 
@@ -14,8 +14,8 @@ inference_n_steps: 20
 inference_min_guidance_scale: 1.2
 inference_max_guidance_scale: 1.2
 
-
-
+model_dtype: fp16
+decode_chunk_size: 8
 cond_mode: 'env' # clip branch for cross attention
 lora_scale: 0.25
 model_pipeline:
