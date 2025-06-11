@@ -12,6 +12,10 @@
 DiffusionRenderer is a general-purpose framework that achieves high-quality geometry and material estimation from real-world videos (inverse rendering), and photorealistic image/video synthesis from G-buffers and lighting (forward rendering). Both the inverse and forward renderers are video diffusion models trained on a combination of curated synthetic datasets and auto-labeled real-world videos.
 Unlike classic PBR, which relies on precise geometry and path tracing, DiffusionRenderer provides a data-driven approximation of light transport through video GenAI models. It synthesizes realistic lighting effects without explicit simulation, complementing PBR for real-world applications such as relighting and material editing, especially when explicit geometry is inaccessible or inaccurate.
 
+## News 
+-  [June 11, 2025] We prepared a scaled-up version of DiffusionRenderer powered by NVIDIA Cosmos. Check out our [video demo](https://www.youtube.com/watch?v=Q3xhYNbXM9c) and [blog post](https://blogs.nvidia.com/blog/cvpr-2025-ai-research-diffusionrenderer/) for more details. The [code release](https://github.com/nv-tlabs/cosmos1-diffusion-renderer) is coming soon, stay tuned!  
+-  [June 11, 2025] Released the code and model weights for the academic version of DiffusionRenderer in this repo! This version reproduces the results in our paper. 
+
 ## Installation
 
 ### Conda environment
